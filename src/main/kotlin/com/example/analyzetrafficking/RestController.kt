@@ -46,7 +46,6 @@ class RestController {
         return ResponseEntity.ok(dt)
     }
 
-
     private fun processData(postdt: PostData): Pair<Double, Double>{
         var textValue: Double = 0.0
         var imageValue: Double = 0.0
