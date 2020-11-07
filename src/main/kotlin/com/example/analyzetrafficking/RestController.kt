@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.client.RestTemplate
 import kotlin.math.max
 
-
 data class Author(
     val name: String,
     val id: String
