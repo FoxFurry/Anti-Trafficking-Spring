@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableAsync
 @SpringBootApplication
 class AnalyzeTraffickingApplication
 
+
 fun main(args: Array<String>) {
 	runApplication<AnalyzeTraffickingApplication>(*args)
 }
