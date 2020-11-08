@@ -29,7 +29,6 @@ data class ExtResponse(
     var suspicious: Boolean
 )
 
-
 @CrossOrigin(origins = ["*"], allowedHeaders = ["*"])
 @RestController
 class RestController constructor(history: HistoryRepo, channels: ChannelsRepo) {
