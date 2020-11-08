@@ -34,7 +34,7 @@ data class ExtResponse(
 )
 
 
-
+@CrossOrigin(origins = arrayOf("*"), allowedHeaders = arrayOf("*"))
 @RestController
 class RestController constructor(history: HistoryRepo, channels: ChannelsRepo) {
     private val historyRepo = history
