@@ -4,6 +4,7 @@ import com.google.cloud.language.v1.ClassifyTextRequest
 import com.google.cloud.language.v1.Document
 import com.google.cloud.language.v1.LanguageServiceClient
 import com.google.cloud.translate.TranslateOptions
+import kotlin.math.max
 
 class ProcessText constructor(inputString: String) {
     private var text = inputString
@@ -11,7 +12,11 @@ class ProcessText constructor(inputString: String) {
     private var adult: Float = 0.0F
     private var massage: Float = 0.0F
     private var dating: Float = 0.0F
+    private var key_words_count: Int = 0
     private var n_points: Int = 0
+
+    private val key_words = arrayOf("fuck","cum","massage","sex","sexual","sexy","sexuality","fucking","cumming","dick","cock","work","money")
+
     init{
         if(text.isNotEmpty())
             process()
@@ -22,9 +27,13 @@ class ProcessText constructor(inputString: String) {
 
     private fun process(){
         translateText()
+        val textSlices = text.split(' ').toMutableList()
+
+        textSlices.forEach {
+            if(it.toLowerCase() in key_words)key_words_count++
+        }
 
         if(text.length < 100){
-            val textSlices = text.split(' ').toMutableList()
             if(textSlices.size < 20){
                 val tempSlices = textSlices.toList()
 
@@ -57,21 +66,8 @@ class ProcessText constructor(inputString: String) {
         text = translate.translate(text).translatedText
     }
 
-    fun getAdult(): Float{
-        return adult
-    }
-
-    fun getMassage(): Float{
-        return massage
-    }
-
-    fun getDating(): Float{
-        return dating
-    }
-
     fun getResults(): Double{
-        return (adult + massage + dating).toDouble() / n_points
+        return max((adult + massage + dating).toDouble() / n_points + key_words_count.toDouble()/10.0, 1.0)
     }
-
 
 }

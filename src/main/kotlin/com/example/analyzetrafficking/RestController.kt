@@ -8,6 +8,16 @@ import java.time.LocalDateTime
 import kotlin.math.max
 
 import org.springframework.web.bind.annotation.GetMapping
+import com.twilio.Twilio
+import com.twilio.type.PhoneNumber
+import com.twilio.rest.api.v2010.account.Message;
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit
+import javax.annotation.PostConstruct
+import kotlin.math.abs
+import kotlin.random.Random
+
 
 data class Author(
     val name: String,
@@ -34,6 +44,19 @@ data class ExtResponse(
 class RestController constructor(history: HistoryRepo, channels: ChannelsRepo) {
     private val historyRepo = history
     private val channelsRepo = channels
+
+    @PostConstruct
+    fun generate() {
+        for(i in 31 downTo 0){
+            val time = LocalDateTime.now().minusDays(i.toLong())
+            val temp = History()
+            temp.type = if(Random.nextInt(0,10) > 5) "message" else "post"
+            temp.value = Random.nextDouble(0.0,1.0)
+            temp.date = LocalDateTime.from(time)
+            historyRepo.save(temp)
+        }
+    }
+
 
     // POSTS
 
@@ -71,30 +94,14 @@ class RestController constructor(history: HistoryRepo, channels: ChannelsRepo) {
 
     // HISTORY
 
-    @GetMapping("/day")
-    fun history_day(): ResponseEntity<Array<History>> {
+    @GetMapping("/history")
+    fun get_histiry(): ResponseEntity<Array<History>>{
         val history_buffer = historyRepo.findAll()
-        val dt = Array(24) { _ -> History() }
-
-        history_buffer.forEach {
-            if (it.date > LocalDateTime.now().minusHours(24)) {
-                val index = 23 - (LocalDateTime.now().hour - it.date.hour).toInt()
-                if (dt[index].value < it.value) dt[index] = it
-            }
-        }
-
-        return ResponseEntity.ok(dt)
-    }
-
-    @GetMapping("/week")
-    fun history_week(): ResponseEntity<Array<History>> {
-        val history_buffer = historyRepo.findAll()
-        val dt = getMonth(history_buffer).toList().takeLast(7).toTypedArray()
-        return ResponseEntity.ok(dt)
+        return ResponseEntity.ok(history_buffer.toTypedArray())
     }
 
     @GetMapping("/month")
-    fun history_month(): ResponseEntity<Array<History>> {
+    fun history_month(): ResponseEntity<Array<MonthData>> {
         val history_buffer = historyRepo.findAll()
         val dt = getMonth(history_buffer)
         return ResponseEntity.ok(dt)
@@ -125,15 +132,45 @@ class RestController constructor(history: HistoryRepo, channels: ChannelsRepo) {
         return ResponseEntity.ok(output)
     }
 
-    private fun getMonth(history_buffer: MutableList<History>): Array<History> {
-        val dt = Array(31) { _ -> History() }
+    @PostMapping("/message")
+    fun message_num(@RequestParam(value = "number", defaultValue = "") number: String): ResponseEntity<Void> {
+        if(number.isNotEmpty()){
+            val ACCOUNT_SID = "ACfe446b551c8e937dabe377f40a0214ea"
+            val AUTH_TOKEN = "b37b7646659f033ad3832a38b6777e55"
 
-        history_buffer.forEach {
-            if (it.date > LocalDateTime.now().minusDays(31)) {
-                val index = 30 - (LocalDateTime.now().dayOfMonth - it.date.dayOfMonth).toInt()
-                if (dt[index].value < it.value) dt[index] = it
-            }
+            Twilio.init(ACCOUNT_SID, AUTH_TOKEN)
+            val message: Message = Message.creator(
+                PhoneNumber("whatsapp:+$number"),
+                PhoneNumber("whatsapp:+14155238886"),
+                "Hello! We found some strange activities on your child account! Please, check our app"
+            )
+                .create()
+            //System.out.println(message.getSid())
+            return ResponseEntity.ok().build()
+
         }
+        return ResponseEntity.notFound().build()
+    }
+
+
+
+    private fun getMonth(history_buffer: MutableList<History>): Array<MonthData> {
+
+        var dt = HashMap<LocalDate, Datum>()
+
+        var reversed = history_buffer.reversed()
+
+        var time = reversed[0].date.toLocalDate()
+
+        reversed.forEach{
+            when(it.type){
+                "message"-> dt[it.date.toLocalDate()].message++
+                "post"->dt[it.date.toLocalDate()].post++
+            }
+
+        }
+
+
         return dt
     }
 
