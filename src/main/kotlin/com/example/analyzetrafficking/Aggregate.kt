@@ -1,23 +1,24 @@
 package com.example.analyzetrafficking
 
-import java.time.LocalDateTime
 import javax.persistence.*
 
 @Entity
-data class History(
+data class Aggregate(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long?,
 
     @Column
-    var date: LocalDateTime,
+    var susDays: Int,
 
     @Column
-    var value: Double,
+    var susWeeks: Int,
 
     @Column
-    var type: String
-) {
-    constructor() : this(null, LocalDateTime.now(), 0.0, "none")
+    var dangDays: Int,
+
+    @Column
+    var dangWeeks: Int
+){
+    constructor() : this(null, 0,0,0,0)
 }
-

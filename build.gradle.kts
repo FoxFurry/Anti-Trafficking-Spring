@@ -34,8 +34,11 @@ dependencies {
 	implementation("com.google.cloud:google-cloud-language:1.101.5")
 	implementation("com.google.cloud:google-cloud-translate:1.95.3")
 
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
 	implementation("com.h2database:h2:1.4.200")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa:2.3.5.RELEASE")
+
+	implementation("com.twilio.sdk:twilio:8.1.0")
 
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.h2database:h2")

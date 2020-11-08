@@ -2,7 +2,6 @@ package com.example.analyzetrafficking
 
 import javax.persistence.*
 
-
 @Entity
 data class Channel(
     @Id
