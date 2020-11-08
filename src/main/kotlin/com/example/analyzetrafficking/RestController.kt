@@ -1,12 +1,17 @@
 package com.example.analyzetrafficking
 
-import org.springframework.web.bind.annotation.RestController
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.RestTemplate
+import java.time.LocalDateTime
 import kotlin.math.max
+import org.springframework.web.bind.annotation.PathVariable
+
+import org.springframework.web.bind.annotation.GetMapping
+
+
+
 
 data class Author(
     val name: String,
@@ -28,23 +33,55 @@ data class ExtResponse(
     var suspicious: Boolean
 )
 
+
+
 @RestController
-class RestController {
+class RestController constructor(history: HistoryRepo, channels: ChannelsRepo) {
+    private val historyRepo = history
+    private val channelsRepo = channels
+
+    // POSTS
+
     @PostMapping("/posts")
-    fun post(@RequestBody postdt: PostData): ResponseEntity<ExtResponse> {
+    fun posts(@RequestBody postdt: PostData): ResponseEntity<ExtResponse> {
         val result = processData(postdt)
-        val dt = ExtResponse((max(result.first, result.second) > 0.55))
+        val dt = ExtResponse(max(result.first, result.second) > 0.55)
 
         return ResponseEntity.ok(dt)
     }
+
+    // MESSAGES
 
     @PostMapping("/messages")
-    fun message(@RequestBody postdt: PostData): ResponseEntity<ExtResponse> {
+    fun messages(@RequestBody postdt: PostData): ResponseEntity<ExtResponse> {
         val result = processData(postdt)
-        val dt = ExtResponse((max(result.first, result.second) > 0.55))
+        val dt = ExtResponse(max(result.first, result.second) > 0.55)
 
         return ResponseEntity.ok(dt)
     }
+
+    // CHANNELS
+
+    @PostMapping("/channels")
+    fun channels_post(@RequestBody channelDt: Channel): ResponseEntity<Void>{
+        channelsRepo.save(channelDt)
+        return ResponseEntity.ok().build()
+    }
+
+    @GetMapping("/channels")
+    fun channels_read(): ResponseEntity<MutableList<Channel>> {
+        val channel_buffer = channelsRepo.findAll()
+        return ResponseEntity.ok(channel_buffer)
+    }
+
+    // HISTORY
+
+    @GetMapping("/history")
+    fun history_get(): ResponseEntity<MutableList<History>>{
+        val history_buffer = historyRepo.findAll()
+        return ResponseEntity.ok(history_buffer)
+    }
+
 
     private fun processData(postdt: PostData): Pair<Double, Double>{
         var textValue: Double = 0.0
@@ -70,6 +107,8 @@ class RestController {
         }
         imageValue = maxImageResult
 
+        val historyVal = History(null, LocalDateTime.now(), max(imageValue, textValue))
+        historyRepo.save(historyVal)
         return Pair(textValue, imageValue)
     }
 }
